@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT Command Interface</title>
+    <script>
+        function sendCommand(command) {
+            const responseElement = document.getElementById("response");
+            responseElement.innerText = "";  // 清空之前的回复
+
+            // 使用POST请求发送指令
+            fetch('/send_command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })  // 传递指令
+            })
+            .then(response => {
+                const reader = response.body.getReader();  // 获取可读流
+                const decoder = new TextDecoder();  // 解码器
+                let buffer = '';  // 用于存储接收到的数据
+
+                // 逐步读取流中的数据
+                reader.read().then(function processText({ done, value }) {
+                    if (done) {
+                        return;
+                    }
+
+                    // 将字节解码并追加到 buffer 中
+                    buffer += decoder.decode(value, { stream: true });
+
+                    // 更新显示的响应
+                    responseElement.innerText = buffer;
+
+                    // 继续读取
+                    reader.read().then(processText);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                responseElement.innerText = "发生错误，请稍后再试。";
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>GPT Command Interface</h1>
+    <div>
+        {% for key, description in commands.items() %}
+            <button onclick="sendCommand('{{ key }}')">{{ description }}</button>
+        {% endfor %}
+    </div>
+    <h2>Response:</h2>
+    <p id="response"></p>
+</body>
+</html>
