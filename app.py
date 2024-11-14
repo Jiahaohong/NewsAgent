@@ -4,8 +4,10 @@ import config
 import time
 from openai import OpenAI
 
+# flask主程序
 app = Flask(__name__)
 
+# gpt
 client = OpenAI(
     # defaults to os.environ.get("OPENAI_API_KEY")
     api_key=config.OPENAI_API_KEY,
@@ -65,7 +67,7 @@ def generate_response(keyword):
         messages=[
             {
                 "role": "system", 
-                "content": f"现在你是一个帮助用户搜集并整理新闻的小助手，你可以使用的默认的网站有以下几个：{', '.join(websites)}\n你给出的回答一定要保持固定的分条陈述的格式，不能有任何改变。你给出的每条回答需要在句子最后添加上网站的链接。"
+                "content": f"现在你是一个帮助用户搜集并整理新闻的小助手，你可以使用的默认的网站有以下几个：{', '.join(websites)}\n如果在某个网站上没有搜到相关内容就不要给出这个网站的回答，如果在一个网站上搜到多个答案请一并给出。你给出的回答一定要保持固定的分条陈述的格式，不能有任何改变。你给出的每条回答需要在句子最后添加上网站的链接。"
             },
             {
                 "role": "user",
@@ -81,7 +83,7 @@ def generate_response(keyword):
         print(chunk)
         content = chunk.choices[0].delta.content
         if content:
-            yield content  # EventSource格式要求以'data:'开头和双换行结束
+            yield content
 
 
 if __name__ == '__main__':
