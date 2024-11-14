@@ -3,10 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT Command Interface</title>
+    <title>Flask News Search</title>
+    <style>
+        .container { display: flex; }
+        .keysection { width: 15%; padding: 10px; }
+        .newssection { width: 20%; padding: 10px; }
+        .websection { width: 65%; padding: 10px; }
+        button { margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Section: Keywords -->
+        <div class="keysection" id="keywords-section">
+            <h2>Keywords</h2>
+            <div id="keywords-list">
+                {% for key in keywords %}
+                    <button onclick="sendKeyword('{{ key }}')">{{ key }}</button><br>
+                {% endfor %}
+            </div>
+            <input type="text" id="new-keyword" placeholder="Add new keyword">
+            <button onclick="addKeyword()">Add Keyword</button>
+        </div>
+    
+        <!-- Middle Section: News related to clicked keyword -->
+        <div class="newssection" id="news-section">
+            <h2>News</h2>
+            <div id="news-list"></div>
+        </div>
+    
+        <!-- Right Section: Webpage content -->
+        <div class="websection" id="webpage-section">
+            <h2>Webpage Content</h2>
+            <div id="webpage-content"></div>
+        </div>
+    </div>
     <script>
         function sendKeyword(keyword) {
-            const responseElement = document.getElementById("response");
+            const responseElement = document.getElementById("news-list");
             responseElement.innerText = "";  // 清空之前的回复
 
             // 使用POST请求发送指令
@@ -41,16 +75,34 @@
                 responseElement.innerText = "发生错误，请稍后再试。";
             });
         }
+
+        function addKeyword() {
+            const keyword = document.getElementById('new-keyword').value;
+            if (keyword) {
+                fetch('/add_keyword', {
+                    method: 'POST',
+                    body: new URLSearchParams({ 'keyword': keyword }),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    updateKeywords(data.keywords);
+                });
+            }
+            document.getElementById('new-keyword').value = ""
+        }
+
+        function updateKeywords(keywords) {
+            const keywordList = document.getElementById('keywords-list');
+            keywordList.innerHTML = '';
+            keywords.forEach(keyword => {
+                const button = document.createElement('button');
+                button.textContent = keyword;
+                button.className = 'keyword-btn';
+                button.onclick = () => sendKeyword(keyword);
+                keywordList.appendChild(button);
+            });
+        }
     </script>
-</head>
-<body>
-    <h1>GPT Command Interface</h1>
-    <div>
-        {% for key in keywords %}
-            <button onclick="sendKeyword('{{ key }}')">{{ key }}</button>
-        {% endfor %}
-    </div>
-    <h2>Response:</h2>
-    <p id="response"></p>
 </body>
 </html>
