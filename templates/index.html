@@ -24,6 +24,15 @@
             </div>
             <input type="text" id="new-keyword" placeholder="Add new keyword">
             <button onclick="addKeyword()">Add Keyword</button>
+
+            <h2>Websites</h2>
+            <div id="websites-list">
+                {% for web in websites %}
+                    <button>{{ web }}</button><br>
+                {% endfor %}
+            </div>
+            <input type="text" id="new-website" placeholder="Add new website">
+            <button onclick="addWebsite()">Add Website</button>
         </div>
     
         <!-- Middle Section: News related to clicked keyword -->
@@ -98,9 +107,33 @@
             keywords.forEach(keyword => {
                 const button = document.createElement('button');
                 button.textContent = keyword;
-                button.className = 'keyword-btn';
                 button.onclick = () => sendKeyword(keyword);
                 keywordList.appendChild(button);
+            });
+        }
+
+        function addWebsite() {
+            const website = document.getElementById('new-website').value;
+            if (website) {
+                fetch('/add_website', {
+                    method: 'POST',
+                    body: new URLSearchParams({ 'website': website }),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                })
+                .then(response => response.json())
+                .then(data => updateWebsites(data.websites));
+            }
+            document.getElementById('new-website').value = ""
+        }
+
+        function updateWebsites(websites) {
+            const websiteList = document.getElementById('websites-list');
+            websiteList.innerHTML = '';
+            websites.forEach(website => {
+                const button = document.createElement('button');
+                button.textContent = website;
+                button.dataset.website = website;
+                websiteList.appendChild(button);
             });
         }
     </script>

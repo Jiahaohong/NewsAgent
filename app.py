@@ -12,12 +12,19 @@ client = OpenAI(
     base_url="https://api.chatanywhere.tech/v1"
 )
 
-# 定义指令
-keywords = ["今日新闻", "人民币", "美元"]
+# 默认关键词
+keywords = ["今日新闻", "人民币", "美元",]
+# 默认网站
+websites = ["https://www.chinanews.com.cn/finance/",
+            "https://finance.sina.com.cn/",
+            "https://finance.eastmoney.com/",
+            "https://www.caijing.com.cn/",
+            "https://www.forbes.com/",
+            ]
 
 @app.route('/')
 def index():
-    return render_template('index.html', keywords=keywords)
+    return render_template('index.html', keywords=keywords, websites=websites)
 
 @app.route('/add_keyword', methods=['POST'])
 def add_keyword():
@@ -33,6 +40,20 @@ def delete_keyword():
         keywords.remove(keyword_to_delete)
     return jsonify(keywords=keywords)
 
+@app.route('/add_website', methods=['POST'])
+def add_website():
+    new_website = request.form.get('website')
+    if new_website and new_website not in websites:
+        websites.append(new_website)
+    return jsonify(websites=websites)
+
+@app.route('/delete_website', methods=['POST'])
+def delete_website():
+    website_to_delete = request.form.get('website')
+    if website_to_delete in websites:
+        websites.remove(website_to_delete)
+    return jsonify(websites=websites)
+
 @app.route('/send_keyword', methods=['POST'])
 def send_keyword():
     keyword = request.json.get('keyword')
@@ -44,7 +65,7 @@ def generate_response(keyword):
         messages=[
             {
                 "role": "system", 
-                "content": "现在你是一个帮助用户搜集并整理新闻的小助手，默认的网站有以下几个：https://www.chinanews.com.cn/finance/，https://finance.sina.com.cn/，https://finance.eastmoney.com/，https://www.caijing.com.cn/https://www.forbes.com/，如果用户有指定网站，你要从用户指定网站中搜索，根据用户给的关键词在该网站中搜索并提取相关新闻信息，并分条整理给出。另外，当你收到今日新闻指令时，整理出今日最新以及最热的新闻并分条给出。如果用户向你输入关键词，请整理出该关键词相关的新闻信息并分条给出。"
+                "content": f"现在你是一个帮助用户搜集并整理新闻的小助手，你可以使用的默认的网站有以下几个：{', '.join(websites)}\n你给出的回答一定要保持固定的分条陈述的格式，不能有任何改变。你给出的每条回答需要在句子最后添加上网站的链接。"
             },
             {
                 "role": "user",
