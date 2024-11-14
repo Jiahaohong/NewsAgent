@@ -13,23 +13,32 @@ client = OpenAI(
 )
 
 # 定义指令
-commands = {
-    "daily_news": "今日新闻",
-    "chinese_yuan": "人民币",
-    "usd": "美元",
-    # 添加更多指令
-}
+keywords = ["今日新闻", "人民币", "美元"]
 
 @app.route('/')
 def index():
-    return render_template('index.html', commands=commands)
+    return render_template('index.html', keywords=keywords)
 
-@app.route('/send_command', methods=['POST'])
-def send_command():
-    command = request.json.get('command')
-    return Response(generate_response(commands[command]), content_type='text/event-stream')
+@app.route('/add_keyword', methods=['POST'])
+def add_keyword():
+    new_keyword = request.form.get('keyword')
+    if new_keyword and new_keyword not in keywords:
+        keywords.append(new_keyword)
+    return jsonify(keywords=keywords)
 
-def generate_response(command_content):
+@app.route('/delete_keyword', methods=['POST'])
+def delete_keyword():
+    keyword_to_delete = request.form.get('keyword')
+    if keyword_to_delete in keywords:
+        keywords.remove(keyword_to_delete)
+    return jsonify(keywords=keywords)
+
+@app.route('/send_keyword', methods=['POST'])
+def send_keyword():
+    keyword = request.json.get('keyword')
+    return Response(generate_response(keyword), content_type='text/event-stream')
+
+def generate_response(keyword):
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -39,7 +48,7 @@ def generate_response(command_content):
             },
             {
                 "role": "user",
-                "content": command_content
+                "content": keyword
             }
         ],
         stream=True,
@@ -52,8 +61,7 @@ def generate_response(command_content):
         content = chunk.choices[0].delta.content
         if content:
             yield content  # EventSource格式要求以'data:'开头和双换行结束
-    
-    time.sleep(2)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPT Command Interface</title>
     <script>
-        function sendCommand(command) {
+        function sendKeyword(keyword) {
             const responseElement = document.getElementById("response");
             responseElement.innerText = "";  // 清空之前的回复
 
             // 使用POST请求发送指令
-            fetch('/send_command', {
+            fetch('/send_keyword', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command: command })  // 传递指令
+                body: JSON.stringify({ keyword: keyword })  // 传递指令
             })
             .then(response => {
                 const reader = response.body.getReader();  // 获取可读流
@@ -46,8 +46,8 @@
 <body>
     <h1>GPT Command Interface</h1>
     <div>
-        {% for key, description in commands.items() %}
-            <button onclick="sendCommand('{{ key }}')">{{ description }}</button>
+        {% for key in keywords %}
+            <button onclick="sendKeyword('{{ key }}')">{{ key }}</button>
         {% endfor %}
     </div>
     <h2>Response:</h2>
